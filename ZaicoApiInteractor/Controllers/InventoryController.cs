@@ -11,7 +11,7 @@ namespace ZaicoApiInteractor.Controllers
     {
         private readonly HttpClient _httpClient;
         private const string ApiUrl = "https://web.zaico.co.jp/api/v1/inventories";
-        private const string ApiToken = "UUWxmEzb1299wHxJoy4pz3cTXPnb5Wqa";
+        private const string ApiToken = "your_token_here";
 
         public InventoryController()
         {
