@@ -1,0 +1,40 @@
+﻿@model List<Item>
+
+@{
+    ViewData["Title"] = "Inventory List";
+}
+
+<h2>Inventory List</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Location</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.id</td>
+                <td>@item.title</td>
+                <td>@item.quantity</td>
+                <td>@item.place</td>
+                <td>
+                    <a href="@Url.Action("Edit", "Inventory", new { id = item.id })" class="btn btn-primary">Edit</a>
+                    <a href="@Url.Action("Delete", "Inventory", new { id = item.id })" class="btn btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h3>Upload Excel File</h3>
+<form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" class="form-control" required />
+    <button type="submit" class="btn btn-success mt-2">Upload & Update</button>
+</form>
