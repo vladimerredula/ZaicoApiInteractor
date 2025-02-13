@@ -27,11 +27,30 @@ namespace ZaicoApiInteractor.Controllers
 
         public async Task<IActionResult> Index()
         {
+            List<Item> items = new List<Item>();
+
             HttpResponseMessage response = await _httpClient.GetAsync(ApiUrl);
             if (response.IsSuccessStatusCode)
             {
-                string data = await response.Content.ReadAsStringAsync();
-                var items = JsonConvert.DeserializeObject<List<Item>>(data);
+                var newItems = new List<Item>();
+
+                if (response.Headers.Contains("Link"))
+                {
+                    var totalCount = response.Headers.GetValues("Total-Count");
+                    var pageCount = (int)Math.Ceiling(int.Parse(totalCount.First()) / 1000.0);
+
+                    for (int i = 1; i <= pageCount; i++)
+                    {
+                        var sample = await _httpClient.GetAsync($"{ApiUrl}?page={i}");
+                        if (sample.IsSuccessStatusCode)
+                        {
+                            var sampleData = await sample.Content.ReadAsStringAsync();
+                            var sampleItem = JsonConvert.DeserializeObject<List<Item>>(sampleData);
+                            items.AddRange(sampleItem);
+                        }
+                    }
+                }
+
                 return View(items);
             }
 

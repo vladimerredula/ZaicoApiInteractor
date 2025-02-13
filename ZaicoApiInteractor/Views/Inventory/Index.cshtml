@@ -12,7 +12,8 @@
             <th>ID</th>
             <th>Name</th>
             <th>Quantity</th>
-            <th>Location</th>
+            <th>Place</th>
+            <th>Updated at</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -24,6 +25,7 @@
                 <td>@item.title</td>
                 <td>@item.quantity</td>
                 <td>@item.place</td>
+                <td>@DateTime.Parse(item.updated_at).ToString("yyyy-MM-dd HH:mm")</td>
                 <td>
                     <a href="@Url.Action("Edit", "Inventory", new { id = item.id })" class="btn btn-primary">Edit</a>
                     <a href="@Url.Action("Delete", "Inventory", new { id = item.id })" class="btn btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
