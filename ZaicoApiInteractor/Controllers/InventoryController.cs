@@ -7,6 +7,7 @@ using ClosedXML.Excel;
 
 namespace ZaicoApiInteractor.Controllers
 {
+    [Authorize]
     public class InventoryController : Controller
     {
         private readonly HttpClient _httpClient;
