@@ -17,7 +17,7 @@ namespace ZaicoApiInteractor.Controllers
     {
         private readonly HttpClient _httpClient;
         private const string ApiUrl = "https://web.zaico.co.jp/api/v1/inventories";
-        private const string ApiToken = "your_token_here";
+        private const string ApiToken = "yFwXQbg9Goik52zvTQB2UVSSuWkTa8wb";
 
         public InventoryController()
         {
@@ -98,24 +98,91 @@ namespace ZaicoApiInteractor.Controllers
             using (var stream = new MemoryStream())
             {
                 await file.CopyToAsync(stream);
-                using (var workbook = new XLWorkbook(stream))
+                stream.Position = 0;
+
+                if (Path.GetExtension(file.FileName).ToLower() == ".csv")
                 {
-                    var worksheet = workbook.Worksheet(1);
-                    var rows = worksheet.RangeUsed().RowsUsed();
-
-                    foreach (var row in rows.Skip(1)) // Skipping header
+                    using (var reader = new StreamReader(stream))
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
-                        var item = new Item
+                        using (var dr = new CsvDataReader(csv))
                         {
-                            id = int.Parse(row.Cell(1).GetValue<string>()),
-                            title = row.Cell(2).GetValue<string>(),
-                            quantity = float.Parse(row.Cell(6).GetValue<string>()),
-                            place = row.Cell(4).GetValue<string>()
-                        };
+                            var dt = new DataTable();
+                            dt.Load(dr);
 
-                        var json = JsonConvert.SerializeObject(item);
-                        var content = new StringContent(json, Encoding.UTF8, "application/json");
-                        await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+                            var records = new List<Dictionary<string, string>>();
+                            foreach (DataRow row in dt.Rows)
+                            {
+                                var record = new Dictionary<string, string>();
+
+                                var item = new Item
+                                {
+                                    id = int.Parse(row[0].ToString()),
+                                    title = row[1].ToString(),
+                                    category = row[2].ToString(),
+                                    place = row[3].ToString(),
+                                    state = row[4].ToString(),
+                                    quantity = int.Parse(row[5].ToString()),
+                                    unit = row[6].ToString(),
+                                    code = row[7].ToString(),
+                                    etc = row[8].ToString(),
+                                    updated_at = DateTime.Parse(row[9].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                                    created_at = DateTime.Parse(row[10].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                                    logical_quantity = int.Parse(row[12].ToString()),
+                                    group_tag = row[13].ToString(),
+                                    user_group = "Base group",
+                                    optional_attributes = new List<OptionalAttribute>()
+                                };
+
+                                for (int i = 14; i < dt.Columns.Count; i++)
+                                {
+                                    if (row[i].ToString() != "")
+                                    {
+                                        item.optional_attributes.Add(new OptionalAttribute
+                                        {
+                                            name = dt.Columns[i].ColumnName,
+                                            value = row[i].ToString()
+                                        });
+                                    }
+                                }
+
+                                var json = JsonConvert.SerializeObject(item);
+                                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                                var result = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    using (var workbook = new XLWorkbook(stream))
+                    {
+                        var worksheet = workbook.Worksheet(1);
+                        var rows = worksheet.RangeUsed().RowsUsed();
+
+                        foreach (var row in rows.Skip(1)) // Skipping header
+                        {
+                            var item = new Item
+                            {
+                                id = int.Parse(row.Cell(1).GetValue<string>()),
+                                title = row.Cell(2).GetValue<string>(),
+                                quantity = int.Parse(row.Cell(3).GetValue<string>()),
+                                place = row.Cell(4).GetValue<string>(),
+                                optional_attributes = new List<OptionalAttribute>()
+                            };
+
+                            // Assuming optional attributes start from column 5
+                            for (int col = 5; col <= row.CellCount(); col += 2)
+                            {
+                                string key = row.Cell(col).GetValue<string>();
+                                string value = row.Cell(col + 1).GetValue<string>();
+                                item.optional_attributes.Add(new OptionalAttribute { name = key, value = value });
+                            }
+
+                            var json = JsonConvert.SerializeObject(item);
+                            var content = new StringContent(json, Encoding.UTF8, "application/json");
+                            await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+                        }
                     }
                 }
             }
