@@ -1,6 +1,6 @@
 ﻿@using System.Security.Claims
 
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ZaicoApiInteractor.styles.css" asp-append-version="true" />
+
+    <!-- Data Tables -->
+    <link rel="stylesheet" href="~/css/datatables.min.css" asp-append-version="true" />
 </head>
 <body>
     <header>
@@ -41,7 +44,7 @@
                                         <span class="position-absolute bottom-50 start-50 p-2 bg-danger border border-light rounded-circle">
                                             <span class="visually-hidden">New alerts</span>
                                         </span>
-                </div>
+                                    </div>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end p-0" aria-labelledby="notification" style="min-width:350px;max-width:370px;" id="notificationList">
                                 </ul>
@@ -115,6 +118,10 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Data Tables -->
+    <script src="~/js/datatables.min.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

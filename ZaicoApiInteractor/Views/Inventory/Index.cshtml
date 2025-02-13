@@ -6,7 +6,7 @@
 
 <h2>Inventory List</h2>
 
-<table class="table">
+<table class="datatable table table-hover">
     <thead>
         <tr>
             <th>ID</th>
@@ -35,8 +35,31 @@
     </tbody>
 </table>
 
-<h3>Upload Excel File</h3>
+<h3 class="mt-3">Upload Excel File</h3>
 <form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data">
     <input type="file" name="file" class="form-control" required />
     <button type="submit" class="btn btn-success mt-2">Upload & Update</button>
 </form>
+
+
+@section Scripts {
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	<script>
+        
+    $('table.datatable').DataTable({
+        layout: {
+            topEnd: {
+                search: {
+                    placeholder: "Search here..."
+                },
+                buttons: ['colvis']
+            }
+        },
+        columnDefs: [{ width: '35%', targets: 1 }],
+        responsive: true,
+        fixedHeader: true
+    });
+    </script>
+}
