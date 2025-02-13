@@ -64,8 +64,7 @@ namespace ZaicoApiInteractor.Controllers
                     new Claim(ClaimTypes.GivenName, userdetails.First_name),
                     new Claim(ClaimTypes.Surname, userdetails.Last_name),
                     new Claim(ClaimTypes.Email, userdetails.Email),
-                    new Claim("Personnelid", userdetails.Personnel_ID.ToString()),
-                    new Claim("ApiToken", userdetails.ApiToken)
+                    new Claim("Personnelid", userdetails.Personnel_ID.ToString())
                 };
 
                 ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims,
