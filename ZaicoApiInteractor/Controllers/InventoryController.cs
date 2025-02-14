@@ -9,6 +9,7 @@ using CsvHelper;
 using System.Globalization;
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
+using System.Reflection;
 
 namespace ZaicoApiInteractor.Controllers
 {
@@ -26,6 +27,13 @@ namespace ZaicoApiInteractor.Controllers
         }
 
         public async Task<IActionResult> Index()
+        {
+            List<Item> items = await GetInventoryItems();
+
+            return View(items);
+        }
+
+        public async Task<List<Item>> GetInventoryItems()
         {
             List<Item> items = new List<Item>();
 
@@ -50,11 +58,9 @@ namespace ZaicoApiInteractor.Controllers
                         }
                     }
                 }
-
-                return View(items);
             }
 
-            return View(new List<Item>());
+            return items;
         }
 
         public async Task<IActionResult> Edit(int id)
@@ -95,6 +101,8 @@ namespace ZaicoApiInteractor.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("File is empty or missing");
 
+            var items = new List<Item>();
+
             using (var stream = new MemoryStream())
             {
                 await file.CopyToAsync(stream);
@@ -110,29 +118,46 @@ namespace ZaicoApiInteractor.Controllers
                             var dt = new DataTable();
                             dt.Load(dr);
 
-                            var records = new List<Dictionary<string, string>>();
                             foreach (DataRow row in dt.Rows)
                             {
-                                var record = new Dictionary<string, string>();
-
                                 var item = new Item
                                 {
-                                    id = int.Parse(row[0].ToString()),
-                                    title = row[1].ToString(),
-                                    category = row[2].ToString(),
-                                    place = row[3].ToString(),
-                                    state = row[4].ToString(),
-                                    quantity = int.Parse(row[5].ToString()),
-                                    unit = row[6].ToString(),
-                                    code = row[7].ToString(),
-                                    etc = row[8].ToString(),
-                                    updated_at = DateTime.Parse(row[9].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz"),
-                                    created_at = DateTime.Parse(row[10].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz"),
-                                    logical_quantity = int.Parse(row[12].ToString()),
-                                    group_tag = row[13].ToString(),
                                     user_group = "Base group",
                                     optional_attributes = new List<OptionalAttribute>()
                                 };
+
+                                if (row[0].ToString() != "")
+                                    item.id = int.Parse(row[0].ToString());
+
+                                if (row[1].ToString() != "")
+                                    item.title = row[1].ToString();
+
+                                if (row[3].ToString() != "")
+                                    item.place = row[3].ToString();
+
+                                if (row[4].ToString() != "")
+                                    item.state = row[4].ToString();
+
+                                if (row[5].ToString() != "")
+                                    item.quantity = float.Parse(row[5].ToString());
+
+                                if (row[6].ToString() != "")
+                                    item.unit = row[6].ToString();
+
+                                if (row[7].ToString() != "")
+                                    item.code = row[7].ToString();
+
+                                if (row[8].ToString() != "")
+                                    item.etc = row[8].ToString();
+
+                                if (row[9].ToString() != "")
+                                    item.updated_at = DateTime.Parse(row[9].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
+
+                                if (row[10].ToString() != "")
+                                    item.created_at = DateTime.Parse(row[10].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
+
+                                if (row[13].ToString() != "")
+                                    item.group_tag = row[13].ToString();
 
                                 for (int i = 14; i < dt.Columns.Count; i++)
                                 {
@@ -146,9 +171,38 @@ namespace ZaicoApiInteractor.Controllers
                                     }
                                 }
 
-                                var json = JsonConvert.SerializeObject(item);
-                                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                                var result = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+                                items.Add(item);
+                            }
+                        }
+
+                        var inventoryItems = await GetInventoryItems();
+
+                        foreach (var item in items)
+                        {
+                            var inventoryItem = inventoryItems.FirstOrDefault(i => i.id == item.id);
+
+                            if (inventoryItem != null)
+                            {
+                                // Compare data if there are changes made
+                                if (!AreEqual(inventoryItem, item))
+                                {
+                                    // Change the update date now as changes has been made
+                                    item.updated_at = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz");
+                                    var json = JsonConvert.SerializeObject(item);
+                                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                                    var result = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+
+                                    if (!result.IsSuccessStatusCode)
+                                    {
+                                        Console.WriteLine(await result.Content.ReadAsStringAsync());
+                                    }
+
+                                    Console.WriteLine("Saved item ID: " + item.id);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Skipping item ID: " + item.id);
+                                }
                             }
                         }
                     }
@@ -188,6 +242,54 @@ namespace ZaicoApiInteractor.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        public static bool AreEqual<T>(T obj1, T obj2)
+        {
+            if (obj1 == null || obj2 == null)
+                return false;
+
+            PropertyInfo[] properties = typeof(T).GetProperties();
+
+            foreach (var property in properties)
+            {
+                // Skip the updated_at property
+                if (property.Name == "updated_at")
+                    continue;
+
+                var value1 = property.GetValue(obj1);
+                var value2 = property.GetValue(obj2);
+
+                if (value1 == null || value2 == null)
+                    continue;
+
+
+                // If it's a list, compare each element
+                if (typeof(List<OptionalAttribute>).IsAssignableFrom(property.PropertyType))
+                {
+                    var list1 = (List<OptionalAttribute>)value1;
+                    var list2 = (List<OptionalAttribute>)value2;
+
+                    if (list1.Count != list2.Count)
+                        return false;
+
+                    foreach (var item in list1)
+                    {
+                        var item2Value = list2.First(x => x.name == item.name).value;
+                        if (item.value != item2Value)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    if (!value1.Equals(value2))
+                        return false;
+                }
+            }
+
+            return true;
         }
     }
 }
