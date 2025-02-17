@@ -28,9 +28,9 @@ namespace ZaicoApiInteractor.Controllers
 
         public async Task<IActionResult> Index()
         {
-            List<Item> items = await GetInventoryItems();
+            ViewData["inventoryItems"] = await GetInventoryItems();
 
-            return View(items);
+            return View();
         }
 
         public async Task<List<Item>> GetInventoryItems()

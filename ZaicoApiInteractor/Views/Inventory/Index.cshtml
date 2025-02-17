@@ -1,8 +1,15 @@
-﻿@model List<Item>
+﻿@model Item
 
 @{
     ViewData["Title"] = "Inventory List";
+    var items = ViewData["inventoryItems"] as List<Item>;
 }
+<!-- Loading Screen -->
+<div id="loadingScreen" class="position-fixed w-100 h-100 d-flex align-items-center justify-content-center bg-white d-block" style="top: 0; left: 0; z-index: 1050;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
 
 <h2>Inventory List</h2>
 
@@ -10,23 +17,41 @@
     <thead>
         <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Quantity</th>
-            <th>Place</th>
-            <th>Updated at</th>
+            <th>@Html.DisplayNameFor(model => model.title)</th>
+            <th>@Html.DisplayNameFor(model => model.quantity)</th>
+            <th class="text-nowrap">@Html.DisplayNameFor(model => model.logical_quantity)</th>
+            <th>@Html.DisplayNameFor(model => model.unit)</th>
+            <th>@Html.DisplayNameFor(model => model.category)</th>
+            <th>@Html.DisplayNameFor(model => model.place)</th>
+            <th>@Html.DisplayNameFor(model => model.code)</th>
+            <th class="text-nowrap">@Html.DisplayNameFor(model => model.group_tag)</th>
+            <th class="text-nowrap">@Html.DisplayNameFor(model => model.created_at)</th>
+            <th class="text-nowrap">@Html.DisplayNameFor(model => model.updated_at)</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in items)
         {
             <tr>
-                <td>@item.id</td>
-                <td>@item.title</td>
-                <td>@item.quantity</td>
-                <td>@item.place</td>
-                <td>@DateTime.Parse(item.updated_at).ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="text-nowrap">@item?.id</td>
                 <td>
+                    @if (item?.item_image != null && item?.item_image?.url != null)
+                    {
+                        <img src="@item.item_image.url" class="img-thumbnail" style="width: 50px; height: 50px;">
+                    }
+                    @item?.title
+                </td>
+                <td>@item?.quantity</td>
+                <td>@item?.logical_quantity</td>
+                <td>@item?.unit</td>
+                <td>@item?.category</td>
+                <td>@item?.place</td>
+                <td>@item?.code</td>
+                <td>@item?.group_tag</td>
+                <td>@DateTime.Parse(item?.created_at).ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@DateTime.Parse(item?.updated_at).ToString("yyyy-MM-dd HH:mm")</td>
+                <td class="text-nowrap">
                     <a href="@Url.Action("Edit", "Inventory", new { id = item.id })" class="btn btn-sm btn-primary">Edit</a>
                     <a href="@Url.Action("Delete", "Inventory", new { id = item.id })" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
                 </td>
@@ -36,9 +61,13 @@
 </table>
 
 <h3 class="mt-3">Upload Excel File</h3>
-<form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data">
+<form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data" id="uploadForm">
     <input type="file" name="file" class="form-control" required />
-    <button type="submit" class="btn btn-success mt-2">Upload & Update</button>
+    <button id="uploadBtn" type="submit" class="btn btn-success mt-2">Upload</button>
+    <button id="loadingBtn" class="btn btn-success visually-hidden mt-2" disabled>
+        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <span role="status">Uploading...</span>
+    </button>
 </form>
 
 
@@ -47,19 +76,71 @@
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
 	<script>
-        
-    $('table.datatable').DataTable({
-        layout: {
-            topEnd: {
-                search: {
-                    placeholder: "Search here..."
-                },
-                buttons: ['colvis']
+        function showLoading() {
+            $("#loadingScreen").removeClass("d-none").addClass("d-block");
+        }
+
+        function hideLoading() {
+            $("#loadingScreen").removeClass("d-block").addClass("d-none");
+        }
+
+        $(document).ready(function() {
+            // showLoading();
+            try {
+                $('table.datatable').DataTable({
+                    colReorder: true,
+                    layout: {
+                        topEnd: {
+                            search: {
+                                placeholder: "Search here..."
+                            },
+                            buttons: [
+                                {
+                                    extend: 'colvis',
+                                    text: 'Show/Hide Columns'
+                                },
+                                {
+                                    extend: 'createState',
+                                    config: {
+                                        creationModal: true,
+                                        toggle: {
+                                            columns: {
+                                                visible: true
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    extend: 'savedStates',
+                                    text: 'Load State'
+                                }
+                            ]
+                        }
+                    },
+                    columnDefs: [
+                        // { width: '35%', targets: 1 }
+                        { visible: false, targets: [3,4,5]}
+                    ],
+                    // scrollX: true,
+                    responsive: true,
+                    fixedHeader: true
+                });
+            } catch (error) {
+                console.error("Error loading inventory:", error);
+            } finally {
+                hideLoading();
             }
-        },
-        columnDefs: [{ width: '35%', targets: 1 }],
-        responsive: true,
-        fixedHeader: true
-    });
+        });
+
+        $("#uploadForm").on("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+            if (this.checkValidity()) {
+                $("#uploadBtn").addClass("visually-hidden");
+                $("#loadingBtn").removeClass("visually-hidden");
+
+                this.submit();
+            }
+        });
+        
     </script>
 }
