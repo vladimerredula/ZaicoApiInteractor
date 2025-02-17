@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using System.Reflection;
+using System.Security.Claims;
 
 namespace ZaicoApiInteractor.Controllers
 {
@@ -386,5 +387,21 @@ namespace ZaicoApiInteractor.Controllers
 
             return true;
         }
+
+        public int GetPersonnelID()
+        {
+            var personnelId = int.Parse(User.FindFirstValue("Personnelid"));
+
+            return personnelId;
+        }
+
+        public string GetUserFullname()
+        {
+            var firstName = User.FindFirstValue(ClaimTypes.GivenName);
+            var lastName = User.FindFirstValue(ClaimTypes.Surname);
+
+            return $"{firstName} {lastName}";
+        }
+
     }
 }
