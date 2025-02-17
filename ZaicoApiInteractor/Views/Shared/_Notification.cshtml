@@ -1,0 +1,47 @@
+﻿@if (TempData["message"] != null)
+{
+    var message = TempData["message"].ToString().Split("-");
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div class="toast align-items-center text-white bg-@message[0] border-0" id="alertToast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <span>
+                        @switch (message[0])
+                        {
+                            case "success":
+                                <i class="bi bi-check-circle"></i>
+                                break;
+                            case "info":
+                                <i class="bi bi-info-square"></i>
+                                break;
+                            case "warning":
+                                <i class="bi bi-exclamation-triangle"></i>
+                                break;
+                            case "danger":
+                                <i class="bi bi-exclamation-octagon"></i>
+                                break;
+                            default:
+                                break;
+
+                        }
+                        &nbsp;&nbsp;@message[1]
+                    </span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="orderToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+        <div class="d-flex">
+            <div class="toast-body">
+                <span class="fs-6"><i class="bi bi-check-circle"></i>&nbsp;&nbsp;Order saved successfully!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>

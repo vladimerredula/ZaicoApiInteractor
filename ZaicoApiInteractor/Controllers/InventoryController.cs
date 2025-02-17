@@ -66,6 +66,7 @@ namespace ZaicoApiInteractor.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             HttpResponseMessage response = await _httpClient.GetAsync($"{ApiUrl}/{id}");
+
             if (response.IsSuccessStatusCode)
             {
                 string data = await response.Content.ReadAsStringAsync();
@@ -73,7 +74,12 @@ namespace ZaicoApiInteractor.Controllers
                 return View(item);
             }
 
-            return NotFound();
+            var message = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                await response.Content.ReadAsStringAsync()
+                );
+
+            TempData["message"] = $"danger-{message?["message"]}";
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -83,23 +89,41 @@ namespace ZaicoApiInteractor.Controllers
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
 
-            if (response.IsSuccessStatusCode)
-                return RedirectToAction("Index");
+            var message = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                await response.Content.ReadAsStringAsync()
+                );
 
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["message"] = $"success-{message?["message"]}";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["message"] = $"warning-{message?["message"]}";
             return View(item);
         }
 
         public async Task<IActionResult> Delete(int id)
         {
             HttpResponseMessage response = await _httpClient.DeleteAsync($"{ApiUrl}/{id}");
-            return RedirectToAction("Index");
+
+            var message = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                await response.Content.ReadAsStringAsync()
+                );
+
+            TempData["message"] = $"{(response.IsSuccessStatusCode ? "success" : "danger")}-{message?["message"]}";
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         public async Task<IActionResult> UploadExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("File is empty or missing");
+            {
+                TempData["message"] = "warning-File is empty or missing";
+                return RedirectToAction(nameof(Index));
+            }
 
             var items = new List<Item>();
 
@@ -170,6 +194,7 @@ namespace ZaicoApiInteractor.Controllers
                                         });
                                     }
                                 }
+                                }
 
                                 items.Add(item);
                             }
@@ -191,23 +216,37 @@ namespace ZaicoApiInteractor.Controllers
                                     var json = JsonConvert.SerializeObject(item);
                                     var content = new StringContent(json, Encoding.UTF8, "application/json");
                                     var result = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
+                                    //var result = await _httpClient.GetAsync($"{ApiUrl}");
 
-                                    if (!result.IsSuccessStatusCode)
+                                    if (result.IsSuccessStatusCode)
+                                        Console.WriteLine("Saved item ID: " + item.id);
+                                    else
                                     {
-                                        Console.WriteLine(await result.Content.ReadAsStringAsync());
-                                    }
+                                        Console.WriteLine($"Unable to save item ID: {item.id} ");
+                                        var error = JsonConvert.DeserializeObject<Dictionary<string, string>>(
+                                            await result.Content.ReadAsStringAsync()
+                                            );
 
-                                    Console.WriteLine("Saved item ID: " + item.id);
+                                        if (error?["message"] != null && error?["message"] != "")
+                                    {
+                                            Console.WriteLine(error?["message"]);
+                                        }
+                                    }
                                 }
                                 else
                                 {
                                     Console.WriteLine("Skipping item ID: " + item.id);
                                 }
+                            } else
+                            {
+                                Console.WriteLine("Not found item ID: " + item.id);
                             }
                         }
+
+                        TempData["message"] = "success-Inventory items has been updated.";
                     }
                 }
-                else
+                else if(Path.GetExtension(file.FileName).ToLower() == ".xlsx")
                 {
                     using (var workbook = new XLWorkbook(stream))
                     {
@@ -238,6 +277,9 @@ namespace ZaicoApiInteractor.Controllers
                             await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
                         }
                     }
+                } else
+                {
+                    TempData["message"] = "danger-Unable to read file.";
                 }
             }
 
@@ -263,30 +305,41 @@ namespace ZaicoApiInteractor.Controllers
                 if (value1 == null || value2 == null)
                     continue;
 
-
                 // If it's a list, compare each element
                 if (typeof(List<OptionalAttribute>).IsAssignableFrom(property.PropertyType))
                 {
                     var list1 = (List<OptionalAttribute>)value1;
                     var list2 = (List<OptionalAttribute>)value2;
 
-                    if (list1.Count != list2.Count)
-                        return false;
+                    //if (list1.Count != list2.Count)
+                    //    return false;
 
-                    foreach (var item in list1)
+                    foreach (var item in list2)
                     {
-                        var item2Value = list2.First(x => x.name == item.name).value;
-                        if (item.value != item2Value)
+                        var item1Value = list1.FirstOrDefault(x => x.name == item.name);
+                        if (item1Value == null)
                         {
+                            Console.WriteLine($"New attribute data - {item.name}: {item.value}");
+                        return false;
+                        } 
+                        else
+                    {
+                            if (item.value != item1Value.value)
+                        {
+                                Console.WriteLine($"Updating {item.name}: From {item1Value.value} to {item.value}");
                             return false;
                         }
                     }
                 }
+                }
                 else
                 {
                     if (!value1.Equals(value2))
+                    {
+                        Console.WriteLine($"Updating {property.Name}: From {value1} to {value2}");
                         return false;
                 }
+            }
             }
 
             return true;
