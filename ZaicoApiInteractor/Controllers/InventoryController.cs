@@ -150,47 +150,89 @@ namespace ZaicoApiInteractor.Controllers
                                     optional_attributes = new List<OptionalAttribute>()
                                 };
 
-                                if (row[0].ToString() != "")
-                                    item.id = int.Parse(row[0].ToString());
+                                if (dt.Columns.Contains("Inventory ID"))
+                                    if (row["Inventory ID"].ToString() != "")
+                                        item.id = int.Parse(row["Inventory ID"].ToString());
 
-                                if (row[1].ToString() != "")
-                                    item.title = row[1].ToString();
+                                if (dt.Columns.Contains("Title"))
+                                    if (row["Title"].ToString() != "")
+                                        item.title = row["Title"].ToString();
 
-                                if (row[3].ToString() != "")
-                                    item.place = row[3].ToString();
+                                if (dt.Columns.Contains("Place"))
+                                    if (row["Place"].ToString() != "")
+                                        item.place = row["Place"].ToString();
 
-                                if (row[4].ToString() != "")
-                                    item.state = row[4].ToString();
+                                if (dt.Columns.Contains("State"))
+                                    if (row["State"].ToString() != "")
+                                        item.state = row["State"].ToString();
 
-                                if (row[5].ToString() != "")
-                                    item.quantity = float.Parse(row[5].ToString());
+                                if (dt.Columns.Contains("Quantity"))
+                                    if (row["Quantity"].ToString() != "")
+                                        item.quantity = float.Parse(row["Quantity"].ToString());
 
-                                if (row[6].ToString() != "")
-                                    item.unit = row[6].ToString();
+                                if (dt.Columns.Contains("Logical quantity"))
+                                    if (row["Logical quantity"].ToString() != "")
+                                        item.logical_quantity = float.Parse(row["Logical quantity"].ToString());
 
-                                if (row[7].ToString() != "")
-                                    item.code = row[7].ToString();
+                                if (dt.Columns.Contains("Unit"))
+                                    if (row["Unit"].ToString() != "")
+                                        item.unit = row["Unit"].ToString();
 
-                                if (row[8].ToString() != "")
-                                    item.etc = row[8].ToString();
+                                if (dt.Columns.Contains("QR code/Barcode"))
+                                    if (row["QR code/Barcode"].ToString() != "")
+                                        item.code = row["QR code/Barcode"].ToString();
 
-                                if (row[9].ToString() != "")
-                                    item.updated_at = DateTime.Parse(row[9].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
+                                if (dt.Columns.Contains("Notes"))
+                                    if (row["Notes"].ToString() != "")
+                                        item.etc = row["Notes"].ToString();
 
-                                if (row[10].ToString() != "")
-                                    item.created_at = DateTime.Parse(row[10].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
+                                if (dt.Columns.Contains("Updated at"))
+                                    if (row["Updated at"].ToString() != "")
+                                        item.updated_at = DateTime.Parse(row["Updated at"].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
 
-                                if (row[13].ToString() != "")
-                                    item.group_tag = row[13].ToString();
+                                if (dt.Columns.Contains("Created at"))
+                                    if (row["Created at"].ToString() != "")
+                                        item.created_at = DateTime.Parse(row["Created at"].ToString()).ToString("yyyy-MM-ddTHH:mm:sszzz");
 
-                                for (int i = 14; i < dt.Columns.Count; i++)
+                                if (dt.Columns.Contains("Group Tag"))
+                                    if (row["Group Tag"].ToString() != "")
+                                        item.group_tag = row["Group Tag"].ToString();
+
+                                var columnNames = new List<string> 
+                                { 
+                                    "Cost per Unit", 
+                                    "Fixed Asset number", 
+                                    "Invoice Date", 
+                                    "Invoice#", 
+                                    "TotaCostJPY", 
+                                    "Delivery number", 
+                                    "SOJ Note", 
+                                    "SSG Account", 
+                                    "Received date", 
+                                    "FixAsset Start Use Day", 
+                                    "Group", 
+                                    "Vendor(From)", 
+                                    "Original Amount in foreign currency", 
+                                    "Exchage Rate", 
+                                    "Updated Quantity(%)", 
+                                    "Paid Date", 
+                                    "Stock taken date (Old stocktake)", 
+                                    "Stocktake difference (Old stocktake)", 
+                                    "For manager", 
+                                    "Location in Zama", 
+                                    "Location in Container" 
+                                };
+
+                                foreach (var column in columnNames)
                                 {
-                                    if (row[i].ToString() != "")
+                                    if (dt.Columns.Contains(column))
+                                {
+                                        if (row[column].ToString() != "")
                                     {
                                         item.optional_attributes.Add(new OptionalAttribute
                                         {
-                                            name = dt.Columns[i].ColumnName,
-                                            value = row[i].ToString()
+                                                name = column,
+                                                value = row[column].ToString()
                                         });
                                     }
                                 }
