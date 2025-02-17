@@ -38,6 +38,7 @@ namespace ZaicoApiInteractor.Controllers
         {
             List<Item> items = new List<Item>();
 
+
             HttpResponseMessage response = await _httpClient.GetAsync(ApiUrl);
             if (response.IsSuccessStatusCode)
             {
@@ -50,12 +51,12 @@ namespace ZaicoApiInteractor.Controllers
 
                     for (int i = 1; i <= pageCount; i++)
                     {
-                        var sample = await _httpClient.GetAsync($"{ApiUrl}?page={i}");
-                        if (sample.IsSuccessStatusCode)
+                        var getPageItems = await _httpClient.GetAsync($"{ApiUrl}?page={i}");
+                        if (getPageItems.IsSuccessStatusCode)
                         {
-                            var sampleData = await sample.Content.ReadAsStringAsync();
-                            var sampleItem = JsonConvert.DeserializeObject<List<Item>>(sampleData);
-                            items.AddRange(sampleItem);
+                            var jsonItems = await getPageItems.Content.ReadAsStringAsync();
+                            var pageItems = JsonConvert.DeserializeObject<List<Item>>(jsonItems);
+                            items.AddRange(pageItems);
                         }
                     }
                 }
@@ -86,6 +87,7 @@ namespace ZaicoApiInteractor.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(Item item)
         {
+            item.updated_at = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:sszzz");
             var json = JsonConvert.SerializeObject(item);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             HttpResponseMessage response = await _httpClient.PutAsync($"{ApiUrl}/{item.id}", content);
@@ -148,7 +150,12 @@ namespace ZaicoApiInteractor.Controllers
                                 var item = new Item
                                 {
                                     user_group = "Base group",
-                                    optional_attributes = new List<OptionalAttribute>()
+                                    update_user_name = GetUserFullname(),
+                                    optional_attributes = new List<OptionalAttribute>(),
+                                    inventory_history = new InventoryHistory()
+                                    {
+                                        memo = "Updated via API"
+                                    }
                                 };
 
                                 if (dt.Columns.Contains("Inventory ID"))
@@ -336,10 +343,15 @@ namespace ZaicoApiInteractor.Controllers
 
             PropertyInfo[] properties = typeof(T).GetProperties();
 
+            var skippedProperties = new List<string> {
+                "updated_at",
+                "update_user_name"
+            };
+
             foreach (var property in properties)
             {
-                // Skip the updated_at property
-                if (property.Name == "updated_at")
+                // Skip the comparison at these properties
+                if (skippedProperties.Contains(property.Name))
                     continue;
 
                 var value1 = property.GetValue(obj1);
