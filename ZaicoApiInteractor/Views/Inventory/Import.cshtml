@@ -1,0 +1,167 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    ViewData["Title"] = "Import";
+}
+
+<div class="container">
+    <h2 class="mb-3">Import</h2>
+
+    <label>Upload CSV File</label>
+
+    <form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data" id="uploadForm" class="mb-3">
+        <div class="row align-items-center">
+            <div class="col">
+                <input type="file" name="file" id="fileInput" class="form-control" accept=".csv" required />
+            </div>
+            <div class="col-auto">
+                <button id="uploadBtn" type="submit" class="btn btn-success">Upload</button>
+                <button id="loadingBtn" class="btn btn-success visually-hidden" disabled>
+                    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                    <span role="status">Uploading...</span>
+                </button>
+            </div>
+        </div>
+    </form>
+    <div id="dropArea">
+        <p class="text-center">- or -</p>
+        <div id="dropZone" class="border rounded-3 bg-light-subtle p-5 text-center" style="cursor: pointer;">
+            <p class="m-0">Drag & drop a file here</p>
+        </div>
+    </div>
+
+    <div id="previewDiv" class="visually-hidden mt-5">
+        <h4 class="mb-0">Preview</h4>
+        <p class="text-body-secondary">Showing first 10 rows only</p>
+        <div class="table-responsive mb-2">
+            <table id="csvTable" class="table table-hover text-nowrap">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <p>Total rows: <span class="fw-bold" id="totalRows"></span></p>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script>
+        const dropZone = $("#dropZone");
+        const fileInput = document.getElementById("fileInput");
+        const table = document.getElementById("csvTable");
+
+        dropZone.on("click", function() {
+            fileInput.click();
+        });
+
+        dropZone.on("mouseenter", function () {
+            $(this).removeClass("bg-light-subtle").addClass("bg-light");
+        });
+
+        dropZone.on("mouseleave", function () {
+            $(this).removeClass("bg-light").addClass("bg-light-subtle");
+        });
+
+        dropZone.on("dragover", function (event) {
+            event.preventDefault();
+            $(this).removeClass("bg-light-subtle").addClass("bg-light");
+        });
+
+        dropZone.on("dragleave", function () {
+            $(this).addClass("bg-light-subtle").removeClass("bg-light");
+        });
+
+        dropZone.on("drop", function (event) {
+            event.preventDefault();
+            $(this).addClass("bg-light-subtle").removeClass("bg-light");
+
+            let files = event.originalEvent.dataTransfer.files;
+            if (files.length > 0) {
+                let file = files[0];
+
+                if (file.type === "text/csv" || file.name.endsWith(".csv")) {
+                    $("#fileInput")[0].files = files; // Assign files to input
+                    // $(this).html(`<p>File: ${file.name}</p>`);
+                    $("#dropArea").addClass("visually-hidden");
+                    $("#previewDiv").removeClass("visually-hidden");
+                    previewCSV(file);
+                } else {
+                    alert("Please upload a valid CSV file.");
+                }
+            }
+        });
+
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                $("#dropArea").addClass("visually-hidden");
+                $("#previewDiv").removeClass("visually-hidden");
+                previewCSV(file);
+            }
+        });
+
+        function previewCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const csvData = e.target.result;
+                const rows = Papa.parse(csvData, {
+                    header: false,  // Set to `true` if the CSV has headers
+                    skipEmptyLines: true
+                });
+
+                renderTable(rows.data);
+            };
+            reader.readAsText(file);
+        }
+
+        function renderTable(csvData) {
+            if (!csvData || csvData.length === 0) return;
+
+            const thead = table.querySelector("thead");
+            const tbody = table.querySelector("tbody");
+            thead.innerHTML = "";
+            tbody.innerHTML = "";
+
+            // Get the first row for headers
+            const headerRow = document.createElement("tr");
+            csvData[0].forEach(col => {
+                const th = document.createElement("th");
+                th.textContent = col.trim();
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // Limit preview to 11 rows including header
+            const rowLimit = Math.min(11, csvData.length);
+
+            // Render the rows
+            for (let i = 1; i < rowLimit; i++) {
+                const row = document.createElement("tr");
+                csvData[i].forEach(col => {
+                    const td = document.createElement("td");
+                    td.textContent = col.trim();
+                    row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            }
+
+            // Total rows count
+            $("#totalRows").text(csvData.length);
+        }
+
+        $("#uploadForm").on("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+            if (this.checkValidity()) {
+                $("#uploadBtn").addClass("visually-hidden");
+                $("#loadingBtn").removeClass("visually-hidden");
+
+                this.submit();
+            }
+        });
+
+    </script>
+}

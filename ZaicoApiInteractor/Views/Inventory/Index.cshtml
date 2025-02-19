@@ -11,23 +11,6 @@
     </div>
 </div>
 
-
-<h2>Upload CSV File</h2>
-<form asp-action="UploadExcel" asp-controller="Inventory" method="post" enctype="multipart/form-data" id="uploadForm" class="mb-5">
-    <div class="row align-items-center">
-        <div class="col">
-            <input type="file" name="file" class="form-control" required />
-        </div>
-        <div class="col">
-            <button id="uploadBtn" type="submit" class="btn btn-success">Upload</button>
-            <button id="loadingBtn" class="btn btn-success visually-hidden" disabled>
-                <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                <span role="status">Uploading...</span>
-            </button>
-        </div>
-    </div>
-</form>
-
 <h2>Inventory List</h2>
 
 <div class="table-responsive">
@@ -160,17 +143,6 @@
             $("#imagePreview").attr("src", $(this).attr("src"));
 
             $("#imageModal").modal("show");
-        });
-
-        $("#uploadForm").on("submit", function(event) {
-            event.preventDefault(); // Prevent the form from submitting
-            if (this.checkValidity()) {
-                $("#uploadBtn").addClass("visually-hidden");
-                $("#loadingBtn").removeClass("visually-hidden");
-
-                this.submit();
-            }
-        });
-        
+        });        
     </script>
 }

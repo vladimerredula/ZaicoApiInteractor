@@ -25,7 +25,21 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Inventory" asp-action="Index">Inventory</a>
+                            <a class="nav-link" asp-area="" asp-controller="Inventory" asp-action="Index">Inventory</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="inventoryDropdown">Tools</a>
+                            <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="inventoryDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Inventory" asp-action="Import">Import</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item disabled" asp-area="" asp-controller="Inventory" asp-action="Index">Export</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item disabled" asp-area="" asp-controller="Inventory" asp-action="Index">Processing status</a>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
 

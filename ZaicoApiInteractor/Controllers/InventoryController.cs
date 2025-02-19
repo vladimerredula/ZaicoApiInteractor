@@ -119,6 +119,8 @@ namespace ZaicoApiInteractor.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        public IActionResult Import() => View();
+
         [HttpPost]
         public async Task<IActionResult> UploadExcel(IFormFile file)
         {
@@ -333,7 +335,7 @@ namespace ZaicoApiInteractor.Controllers
                 }
             }
 
-            return RedirectToAction("Index");
+            return View("Import");
         }
 
         public static bool AreEqual<T>(T obj1, T obj2)
