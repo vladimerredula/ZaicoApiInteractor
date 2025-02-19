@@ -77,6 +77,13 @@
     </tbody>
 </table>
 
+<div class="modal fade" id="imageModal">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <img class="img-fluid img-thumbnail" id="imagePreview"/>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
 	@{
@@ -137,6 +144,12 @@
             } finally {
                 hideLoading();
             }
+        });
+
+        $("tr img").on("click", function () {
+            $("#imagePreview").attr("src", $(this).attr("src"));
+
+            $("#imageModal").modal("show");
         });
 
         $("#uploadForm").on("submit", function(event) {
