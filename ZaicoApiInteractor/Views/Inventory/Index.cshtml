@@ -30,52 +30,54 @@
 
 <h2>Inventory List</h2>
 
-<table class="datatable table table-hover">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>@Html.DisplayNameFor(model => model.title)</th>
-            <th>@Html.DisplayNameFor(model => model.quantity)</th>
-            <th class="text-nowrap">@Html.DisplayNameFor(model => model.logical_quantity)</th>
-            <th>@Html.DisplayNameFor(model => model.unit)</th>
-            <th>@Html.DisplayNameFor(model => model.category)</th>
-            <th>@Html.DisplayNameFor(model => model.place)</th>
-            <th>@Html.DisplayNameFor(model => model.code)</th>
-            <th class="text-nowrap">@Html.DisplayNameFor(model => model.group_tag)</th>
-            <th class="text-nowrap">@Html.DisplayNameFor(model => model.created_at)</th>
-            <th class="text-nowrap">@Html.DisplayNameFor(model => model.updated_at)</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in items)
-        {
+<div class="table-responsive">
+    <table class="datatable table table-hover">
+        <thead>
             <tr>
-                <td class="text-nowrap">@item?.id</td>
-                <td>
-                    @if (item?.item_image != null && item?.item_image?.url != null)
-                    {
-                        <img src="@item.item_image.url" class="img-thumbnail" style="width: 50px; height: 50px;">
-                    }
-                    @item?.title
-                </td>
-                <td>@item?.quantity</td>
-                <td>@item?.logical_quantity</td>
-                <td>@item?.unit</td>
-                <td>@item?.category</td>
-                <td>@item?.place</td>
-                <td>@item?.code</td>
-                <td>@item?.group_tag</td>
-                <td>@DateTime.Parse(item?.created_at).ToString("yyyy-MM-dd HH:mm")</td>
-                <td>@DateTime.Parse(item?.updated_at).ToString("yyyy-MM-dd HH:mm")</td>
-                <td class="text-nowrap">
-                    <a href="@Url.Action("Edit", "Inventory", new { id = item.id })" class="btn btn-sm btn-primary disabled" title="Disable for the moment">Edit</a>
-                    <a href="@Url.Action("Delete", "Inventory", new { id = item.id })" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
-                </td>
+                <th>ID</th>
+                <th>@Html.DisplayNameFor(model => model.title)</th>
+                <th>@Html.DisplayNameFor(model => model.quantity)</th>
+                <th class="text-nowrap">@Html.DisplayNameFor(model => model.logical_quantity)</th>
+                <th>@Html.DisplayNameFor(model => model.unit)</th>
+                <th>@Html.DisplayNameFor(model => model.category)</th>
+                <th>@Html.DisplayNameFor(model => model.place)</th>
+                <th>@Html.DisplayNameFor(model => model.code)</th>
+                <th class="text-nowrap">@Html.DisplayNameFor(model => model.group_tag)</th>
+                <th class="text-nowrap">@Html.DisplayNameFor(model => model.created_at)</th>
+                <th class="text-nowrap">@Html.DisplayNameFor(model => model.updated_at)</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr class="align-middle">
+                    <td class="text-nowrap align-middle">@item?.id</td>
+                    <td class="align-middle">
+                        @if (item?.item_image != null && item?.item_image?.url != null)
+                        {
+                            <img src="@item.item_image.url" class="img-thumbnail" style="width: 50px; height: 50px;">
+                        }
+                        @item?.title
+                    </td>
+                    <td class="align-middle">@item?.quantity</td>
+                    <td class="align-middle">@item?.logical_quantity</td>
+                    <td class="align-middle">@item?.unit</td>
+                    <td class="align-middle">@item?.category</td>
+                    <td class="align-middle">@item?.place</td>
+                    <td class="align-middle">@item?.code</td>
+                    <td class="align-middle">@item?.group_tag</td>
+                    <td class="align-middle">@DateTime.Parse(item?.created_at).ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="align-middle">@DateTime.Parse(item?.updated_at).ToString("yyyy-MM-dd HH:mm")</td>
+                    <td class="text-nowrap">
+                        <a href="@Url.Action("Edit", "Inventory", new { id = item.id })" class="btn btn-sm btn-primary disabled" title="Disable for the moment">Edit</a>
+                        <a href="@Url.Action("Delete", "Inventory", new { id = item.id })" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <div class="modal fade" id="imageModal">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -111,10 +113,12 @@
                             buttons: [
                                 {
                                     extend: 'colvis',
-                                    text: 'Show/Hide Columns'
+                                    text: 'Show/Hide Columns',
+                                    className: 'btn btn-sm'
                                 },
                                 {
                                     extend: 'createState',
+                                    className: 'btn btn-sm',
                                     config: {
                                         creationModal: true,
                                         toggle: {
@@ -126,6 +130,7 @@
                                 },
                                 {
                                     extend: 'savedStates',
+                                    className: 'btn btn-sm',
                                     text: 'Load State'
                                 }
                             ]
@@ -135,8 +140,13 @@
                         // { width: '35%', targets: 1 }
                         { visible: false, targets: [3,4,5]}
                     ],
-                    // scrollX: true,
-                    responsive: true,
+                    scrollCollapse: true,
+                    scrollX: true,
+                    // responsive: true,
+                    fixedColumns: {
+                        left: 2, // Fix the first 2 columns
+                        // right: 1 // Fix the last column: actions
+                    },
                     fixedHeader: true
                 });
             } catch (error) {
