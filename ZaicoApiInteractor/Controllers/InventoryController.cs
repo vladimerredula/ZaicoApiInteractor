@@ -296,6 +296,7 @@ namespace ZaicoApiInteractor.Controllers
                         }
 
                         TempData["message"] = "success-Inventory items has been updated.";
+                        return RedirectToAction(nameof(Index));
                     }
                 }
                 else if(Path.GetExtension(file.FileName).ToLower() == ".xlsx")
